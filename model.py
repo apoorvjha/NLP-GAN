@@ -60,8 +60,9 @@ class Generator(nn.Module):
         self.teacher_forcing_ratio = 1.0 # the orignal tokens are passed.
     def forward(self, X):
         e_hidden = self.encoder.initHidden()
-        for i in X:
-            e_output, e_hidden = self.encoder(i, e_hidden)
+        input_length = X.size(0)
+        for i in range(input_length):
+            e_output, e_hidden = self.encoder(X[i], e_hidden)
         #d_hidden = self.decoder.initHidden()
         d_hidden = e_hidden
         output_sequences = []
@@ -134,8 +135,8 @@ class Discriminator(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         '''
         TODO :
-            1. Create a seq2vec classification model.
-            2. Write the training loop for the same.
+            1. Create a seq2vec classification model. : Done
+            2. Write the training loop for the same.  : Done
         ''' 
         super(Discriminator, self).__init__()
         self.encoder = Encoder(input_dim, hidden_dim).to(device)
@@ -146,18 +147,44 @@ class Discriminator(nn.Module):
         self.criterion = nn.NLLLoss()
         self.encoder_optimizer = SGD(self.encoder.parameters(), lr=learning_rate)
         self.dense = Dense(hidden_dim, output_dim)
-        self.encoder_optimizer = SGD(self.dense.parameters(), lr=learning_rate)
+        self.dense_optimizer = SGD(self.dense.parameters(), lr=learning_rate)
+    def forward(self, X):
+        e_hidden = self.encoder.initHidden()
+        input_length = X.size(0)
+        for i in range(input_length):
+            e_output, e_hidden = self.encoder(X[i], e_hidden)
+        return self.dense(e_output)
+    def train(self, Xs, Ys):
+        for X, Y in zip(Xs, Ys):
+            self.encoder_optimizer.zero_grad()
+            self.dense_optimizer.zero_grad()
+            e_hidden = self.encoder.initHidden()
+            loss = 0
+            input_length = X.size(0)
+            for i in range(input_length):
+                e_output, e_hidden = self.encoder(X[i], e_hidden)
+            prediction = self.dense(e_output)
+            print(prediction.size(), Y.size())
+            loss += self.criterion(prediction, Y)
+            loss.backward()
+            self.encoder_optimizer.step()
+            self.dense_optimizer.step()
+            print(loss.item())
+
 
 def test():
-    # N=200
+    N=200
     # G = Generator(250, 64, 500, 10).to(device)
     # print(G)
-    # X = torch.zeros(N,20,1, dtype=torch.long, device=device)
+    X = torch.zeros(N,20,1, dtype=torch.long, device=device)
     # Y = torch.zeros(N,30,1, dtype=torch.long, device=device)
     # G.train(X, Y)
     # d = Dense(100,2)
     # print(d)
-    pass
+    D = Discriminator(250, 64, 1).to(device)
+    print(D)
+    Y = torch.zeros(N, 1, dtype=torch.long, device=device)
+    D.train(X, Y)
 
 if __name__ == '__main__':
     test()
