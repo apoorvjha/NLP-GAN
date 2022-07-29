@@ -125,7 +125,7 @@ class Dense(nn.Module):
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(p=0.2))
             layers.append(nn.Linear(hidden_layers[-1], output_dim))
-        layers.append(nn.Softmax(dim=1))
+        #layers.append(nn.Softmax(dim=1))
         self.model = nn.Sequential(*layers)
     def forward(self, X):
         X = self.model(X)
@@ -140,7 +140,6 @@ class Discriminator(nn.Module):
         ''' 
         super(Discriminator, self).__init__()
         self.encoder = Encoder(input_dim, hidden_dim).to(device)
-        self.max_sequence_length = max_sequence_length
         self.SOS = 0
         self.EOS = 1
         learning_rate = 1e-3
@@ -163,8 +162,7 @@ class Discriminator(nn.Module):
             input_length = X.size(0)
             for i in range(input_length):
                 e_output, e_hidden = self.encoder(X[i], e_hidden)
-            prediction = self.dense(e_output)
-            print(prediction.size(), Y.size())
+            prediction = self.dense(e_output)[0]
             loss += self.criterion(prediction, Y)
             loss.backward()
             self.encoder_optimizer.step()
@@ -176,18 +174,19 @@ def test():
     N=200
     # G = Generator(250, 64, 500, 10).to(device)
     # print(G)
-    X = torch.zeros(N,20,1, dtype=torch.long, device=device)
+    # X = torch.zeros(N,20,1, dtype=torch.long, device=device)
     # Y = torch.zeros(N,30,1, dtype=torch.long, device=device)
     # G.train(X, Y)
     # d = Dense(100,2)
     # print(d)
-    D = Discriminator(250, 64, 1).to(device)
-    print(D)
-    Y = torch.zeros(N, 1, dtype=torch.long, device=device)
-    D.train(X, Y)
+    # D = Discriminator(250, 64, 1).to(device)
+    # print(D)
+    # Y = torch.zeros(N, 1, dtype=torch.long, device=device)
+    # D.train(X, Y)
 
 if __name__ == '__main__':
-    test()
+    # test()
+    pass
 
 
 
