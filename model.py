@@ -46,13 +46,13 @@ class Decoder(nn.Module):
         return torch.zeros(1,1,self.hidden_dim, device = device)
 
 class Generator(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, max_sequence_length):
+    def __init__(self, input_dim, hidden_dim, output_dim, max_sequence_length, SOS, EOS):
         super(Generator, self).__init__()
         self.encoder = Encoder(input_dim, hidden_dim).to(device)
         self.decoder = Decoder(output_dim, hidden_dim).to(device)
         self.max_sequence_length = max_sequence_length
-        self.SOS = 0
-        self.EOS = 1
+        self.SOS = SOS
+        self.EOS = EOS
         learning_rate = 1e-3
         self.criterion = nn.NLLLoss()
         self.encoder_optimizer = SGD(self.encoder.parameters(), lr=learning_rate)
@@ -140,8 +140,6 @@ class Discriminator(nn.Module):
         ''' 
         super(Discriminator, self).__init__()
         self.encoder = Encoder(input_dim, hidden_dim).to(device)
-        self.SOS = 0
-        self.EOS = 1
         learning_rate = 1e-3
         self.criterion = nn.NLLLoss()
         self.encoder_optimizer = SGD(self.encoder.parameters(), lr=learning_rate)
