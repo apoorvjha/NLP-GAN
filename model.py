@@ -4,11 +4,12 @@ from torch.nn import functional as F
 from torch.optim import SGD
 import random
 
-if torch.cuda.is_available():
-    device = 'cuda'
-else:
-    device = 'cpu'
+# if torch.cuda.is_available():
+#     device = 'cuda'
+# else:
+#     device = 'cpu'
 
+device = 'cpu'
 
 class Encoder(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -46,6 +47,11 @@ class Decoder(nn.Module):
         return torch.zeros(1,1,self.hidden_dim, device = device)
 
 class Generator(nn.Module):
+    '''
+        TODO :
+            1. Fix the vlock of code so that we get gradients to pass through. This requires 
+            passing OHV representation of output tokens. 
+    '''
     def __init__(self, input_dim, hidden_dim, output_dim, max_sequence_length, SOS, EOS):
         super(Generator, self).__init__()
         self.encoder = Encoder(input_dim, hidden_dim).to(device)
@@ -54,7 +60,7 @@ class Generator(nn.Module):
         self.SOS = SOS
         self.EOS = EOS
         learning_rate = 1e-3
-        self.criterion = nn.NLLLoss()
+        self.criterion = nn.CrossEntropyLoss()
         self.encoder_optimizer = SGD(self.encoder.parameters(), lr=learning_rate)
         self.decoder_optimizer = SGD(self.decoder.parameters(), lr=learning_rate)
         self.teacher_forcing_ratio = 1.0 # the orignal tokens are passed.
@@ -95,14 +101,20 @@ class Generator(nn.Module):
             if use_teacher_forcing:
                 for i in range(target_length):
                     Xi, d_hidden = self.decoder(Xi, d_hidden)
+                    # ---------------------- To be fixed ------------- #
+                    # topv, topi = Xi.topk(1)
+                    # Xi = topi.squeeze().detach()
+                    #--------------------------------------------------#
                     loss += self.criterion(Xi, Y[i])
                     Xi = Y[i]                
             else:
                 for i in range(target_length):
                     Xi, d_hidden = self.decoder(Xi, d_hidden)
-                    loss += self.criterion(Xi, Y[i])
-                    topv, topi = Xi.topk(1)
-                    Xi = topi.squeeze().detach()
+                    # ---------------------- To be fixed ------------- #
+                    # topv, topi = Xi.topk(1)
+                    # Xi = topi.squeeze().detach()
+                    #--------------------------------------------------#
+                    loss += self.criterion(Xi.view(-1,1).type(torch.FloatTensor), Y[i].view(-1))
                     if Xi.item() == self.EOS:
                         break
             loss.backward()
@@ -125,7 +137,7 @@ class Dense(nn.Module):
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(p=0.2))
             layers.append(nn.Linear(hidden_layers[-1], output_dim))
-        #layers.append(nn.Softmax(dim=1))
+        layers.append(nn.Sigmoid())
         self.model = nn.Sequential(*layers)
     def forward(self, X):
         X = self.model(X)
@@ -141,7 +153,7 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.encoder = Encoder(input_dim, hidden_dim).to(device)
         learning_rate = 1e-3
-        self.criterion = nn.NLLLoss()
+        self.criterion = nn.BCELoss()
         self.encoder_optimizer = SGD(self.encoder.parameters(), lr=learning_rate)
         self.dense = Dense(hidden_dim, output_dim)
         self.dense_optimizer = SGD(self.dense.parameters(), lr=learning_rate)
@@ -161,6 +173,8 @@ class Discriminator(nn.Module):
             for i in range(input_length):
                 e_output, e_hidden = self.encoder(X[i], e_hidden)
             prediction = self.dense(e_output)[0]
+            Y = Y.to(device)
+            print(prediction, Y)
             loss += self.criterion(prediction, Y)
             loss.backward()
             self.encoder_optimizer.step()
