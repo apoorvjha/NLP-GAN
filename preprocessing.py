@@ -120,4 +120,10 @@ class Preprocessing:
             X.append(self.generateTokens(input_sentence))
             Y.append(self.generateTokens(output_sentence,mode=1))
         return array(X), array(Y)
+
+    def getVocabSize(self):
+        return self.tokenizer_input.getVocabSize(), self.tokenizer_output.getVocabSize()
+
+    def get_SOS_EOS_token(self):
+        return self.tokenizer_output.tokenizer.word_index['sos'], self.tokenizer_output.tokenizer.word_index['eos']
     
