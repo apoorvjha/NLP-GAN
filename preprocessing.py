@@ -119,9 +119,11 @@ class Preprocessing:
             output_sentence = self.data[i][1]
             X.append(self.generateTokens(input_sentence))
             Y.append(self.generateTokens(output_sentence,mode=1))
-        input_vocab_size, output_vocab_size = self.getVocabSize()
-        X = array(list(map(self.getOHV, X, input_vocab_size)))
-        Y = array(list(map(self.getOHV, Y, output_vocab_size)))
+        #input_vocab_size, output_vocab_size = self.getVocabSize()
+        #X = array(list(map(self.getOHV, X, input_vocab_size)))
+        #Y = array(list(map(self.getOHV, Y, output_vocab_size)))
+        X = array(X)
+        Y = array(Y)
         return X, Y
 
     def getVocabSize(self):

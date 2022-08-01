@@ -101,21 +101,17 @@ class Generator(nn.Module):
             if use_teacher_forcing:
                 for i in range(target_length):
                     Xi, d_hidden = self.decoder(Xi, d_hidden)
-                    # ---------------------- To be fixed ------------- #
-                    # topv, topi = Xi.topk(1)
-                    # Xi = topi.squeeze().detach()
-                    #--------------------------------------------------#
                     loss += self.criterion(Xi, Y[i])
                     Xi = Y[i]                
             else:
                 for i in range(target_length):
                     Xi, d_hidden = self.decoder(Xi, d_hidden)
-                    # ---------------------- To be fixed ------------- #
-                    # topv, topi = Xi.topk(1)
-                    # Xi = topi.squeeze().detach()
-                    #--------------------------------------------------#
                     loss += self.criterion(Xi.view(-1,1).type(torch.FloatTensor), Y[i].view(-1))
-                    if Xi.item() == self.EOS:
+                    # ---------------------- To be fixed ------------- #
+                    topv, topi = Xi.topk(1)
+                    Xi_decoded = topi.squeeze().detach()
+                    #--------------------------------------------------#
+                    if Xi_decoded.item() == self.EOS:
                         break
             loss.backward()
             self.encoder_optimizer.step()
