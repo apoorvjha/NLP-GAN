@@ -2,7 +2,7 @@ from os.path import exists
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import json
-from numpy import array
+from numpy import array, zeros
 
 class Tokenize:
     def __init__(self,num_words=None):
@@ -119,11 +119,22 @@ class Preprocessing:
             output_sentence = self.data[i][1]
             X.append(self.generateTokens(input_sentence))
             Y.append(self.generateTokens(output_sentence,mode=1))
-        return array(X), array(Y)
+        input_vocab_size, output_vocab_size = self.getVocabSize()
+        X = array(list(map(self.getOHV, X, input_vocab_size)))
+        Y = array(list(map(self.getOHV, Y, output_vocab_size)))
+        return X, Y
 
     def getVocabSize(self):
         return self.tokenizer_input.getVocabSize(), self.tokenizer_output.getVocabSize()
 
     def get_SOS_EOS_token(self):
         return self.tokenizer_output.tokenizer.word_index['sos'], self.tokenizer_output.tokenizer.word_index['eos']
+
+    def getOHV(self, X, vocab_size):
+        for i in range(len(X)):
+            temp = zeros((vocab_size))
+            temp[X[i]] = 1
+            X[i] = temp
+        return X
+        
     
