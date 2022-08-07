@@ -2,6 +2,8 @@ import preprocessing
 import GAN
 from random import randint
 import torch
+import time
+from numpy import array
 
 if __name__ == '__main__':
     preprocessor = preprocessing.Preprocessing()
@@ -19,9 +21,20 @@ if __name__ == '__main__':
     print("SOS and EOS : ", SOS, EOS)
     print("Hidden Dim : ", hidden_dim)
     gan = GAN.NLP_GAN(input_vocab_size, hidden_dim, output_vocab_size, max_sequence_length, n_classes, SOS, EOS)
-    gan.train(X, Y, 5)
+    start = time.time()
+    gan.train(X[:100], Y[:100], 2)
+    print(time.time() - start)
     # idx = randint(0,X.shape[0]-11)
     # print(X[idx : idx + 10])
     # print(Y[idx : idx + 10])
+    test = "I am a cool man!"
+    X = array(preprocessor.generateTokens(test))
+    Y = gan.generate(X)
+    if SOS in Y:
+        Y.remove(SOS)
+    if EOS in Y:
+        Y.remove(EOS)
+    print(preprocessor.decodeSequence(Y))
+
     
     
