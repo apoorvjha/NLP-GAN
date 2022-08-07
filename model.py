@@ -4,12 +4,12 @@ from torch.nn import functional as F
 from torch.optim import SGD
 import random
 
-# if torch.cuda.is_available():
-#     device = 'cuda'
-# else:
-#     device = 'cpu'
+if torch.cuda.is_available():
+    device = 'cuda'
+else:
+    device = 'cpu'
 
-device = 'cpu'
+# device = 'cpu'
 
 class Encoder(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -50,7 +50,7 @@ class Generator(nn.Module):
     '''
         TODO :
             1. Fix the vlock of code so that we get gradients to pass through. This requires 
-            passing OHV representation of output tokens. 
+            passing OHV representation of output tokens. : Done (Without OHV)
     '''
     def __init__(self, input_dim, hidden_dim, output_dim, max_sequence_length, SOS, EOS):
         super(Generator, self).__init__()
@@ -106,17 +106,15 @@ class Generator(nn.Module):
             else:
                 for i in range(target_length):
                     Xi, d_hidden = self.decoder(Xi, d_hidden)
-                    loss += self.criterion(Xi.view(-1,1).type(torch.FloatTensor), Y[i].view(-1))
-                    # ---------------------- To be fixed ------------- #
+                    loss += self.criterion(Xi.type(torch.FloatTensor).to(device), Y[i].view(-1))
                     topv, topi = Xi.topk(1)
                     Xi_decoded = topi.squeeze().detach()
-                    #--------------------------------------------------#
                     if Xi_decoded.item() == self.EOS:
                         break
             loss.backward()
             self.encoder_optimizer.step()
             self.decoder_optimizer.step()
-            print(loss.item() / target_length)
+            #print(loss.item() / target_length)
 
 class Dense(nn.Module):
     def __init__(self, input_dim, output_dim,hidden_layers=[8]):
@@ -170,12 +168,11 @@ class Discriminator(nn.Module):
                 e_output, e_hidden = self.encoder(X[i], e_hidden)
             prediction = self.dense(e_output)[0]
             Y = Y.to(device)
-            print(prediction, Y)
             loss += self.criterion(prediction, Y)
             loss.backward()
             self.encoder_optimizer.step()
             self.dense_optimizer.step()
-            print(loss.item())
+            #print(loss.item())
 
 
 def test():
