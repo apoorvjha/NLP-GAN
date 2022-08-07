@@ -12,8 +12,12 @@ if __name__ == '__main__':
     hidden_dim = 128
     n_classes = 1
     max_sequence_length = max([i.shape[0] for i in X]) - 1
-    # print(X.size(), Y.size())
     SOS, EOS = preprocessor.get_SOS_EOS_token()
+    print("Shapes : ", X.shape, Y.shape)
+    print("max_length : ",max_sequence_length)
+    print("Vocb_sizes : ", input_vocab_size, output_vocab_size)
+    print("SOS and EOS : ", SOS, EOS)
+    print("Hidden Dim : ", hidden_dim)
     gan = GAN.NLP_GAN(input_vocab_size, hidden_dim, output_vocab_size, max_sequence_length, n_classes, SOS, EOS)
     gan.train(X, Y, 5)
     # idx = randint(0,X.shape[0]-11)
