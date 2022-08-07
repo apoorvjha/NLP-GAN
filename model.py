@@ -49,8 +49,7 @@ class Decoder(nn.Module):
 class Generator(nn.Module):
     '''
         TODO :
-            1. Fix the vlock of code so that we get gradients to pass through. This requires 
-            passing OHV representation of output tokens. : Done (Without OHV)
+            1. Fix the shape issue with the case in teacher_forcein : Done
     '''
     def __init__(self, input_dim, hidden_dim, output_dim, max_sequence_length, SOS, EOS):
         super(Generator, self).__init__()
@@ -63,7 +62,7 @@ class Generator(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
         self.encoder_optimizer = SGD(self.encoder.parameters(), lr=learning_rate)
         self.decoder_optimizer = SGD(self.decoder.parameters(), lr=learning_rate)
-        self.teacher_forcing_ratio = 1.0 # the orignal tokens are passed.
+        self.teacher_forcing_ratio = 0.5 # the orignal tokens are passed.
     def forward(self, X):
         e_hidden = self.encoder.initHidden()
         input_length = X.size(0)
@@ -101,7 +100,7 @@ class Generator(nn.Module):
             if use_teacher_forcing:
                 for i in range(target_length):
                     Xi, d_hidden = self.decoder(Xi, d_hidden)
-                    loss += self.criterion(Xi, Y[i])
+                    loss += self.criterion(Xi.type(torch.FloatTensor).to(device), Y[i].view(-1))
                     Xi = Y[i]                
             else:
                 for i in range(target_length):
