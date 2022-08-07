@@ -15,7 +15,7 @@ class Tokenize:
         self.tokenizer.fit_on_texts(words)
     def getSequences(self,inputs):
         return self.tokenizer.texts_to_sequences(inputs)
-    def padSequences(self,seq,maxlen=250,padding='pre'):
+    def padSequences(self,seq,maxlen=50,padding='pre'):
         return pad_sequences(seq,maxlen=maxlen,padding=padding)
     def save(self,fname='tokenizer.json'):
         #print(self.tokenizer.to_json())
@@ -29,6 +29,8 @@ class Tokenize:
         return len(self.tokenizer.word_index.keys())
     def getVocab(self):
         return list(self.tokenizer.word_index.keys())
+    def getSentenceFromSequence(self,sequence):
+        return self.tokenizer.sequences_to_texts([sequence]) 
 
 class Preprocessing:
     def __init__(self):
@@ -138,5 +140,8 @@ class Preprocessing:
             temp[X[i]] = 1
             X[i] = temp
         return X
+    
+    def decodeSequence(self, Y):
+        return self.tokenizer_output.getSentenceFromSequence(Y)
         
     
