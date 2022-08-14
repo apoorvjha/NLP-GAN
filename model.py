@@ -113,7 +113,7 @@ class Generator(nn.Module):
             loss.backward()
             self.encoder_optimizer.step()
             self.decoder_optimizer.step()
-            #print(loss.item() / target_length)
+        return loss.item()
 
 class Dense(nn.Module):
     def __init__(self, input_dim, output_dim,hidden_layers=[8]):
@@ -171,7 +171,7 @@ class Discriminator(nn.Module):
             loss.backward()
             self.encoder_optimizer.step()
             self.dense_optimizer.step()
-            #print(loss.item())
+        return loss.item()
 
 
 def test():
